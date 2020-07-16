@@ -295,11 +295,11 @@ if __name__=="__main__":
 		quick_time=timer()
 		print ("Time Stamp ---> "+str(quick_time-start))
 		ssdp()
-        elif str(nbns_string) != 'None':
-		print "NBNS Packet Response\n"
+        elif str(nbns_string) == 'None':
+		print "NBNS No Packet Response\n"
 		extract_match(str(nbns_string)+str(mdns_string))
-        elif str(mdns_string) != 'None':
-		print "MDNS Packet Response\n"
+        elif str(mdns_string) == 'None':
+		print "MDNS No Packet Response\n"
 		extract_match(str(nbns_string)+str(mdns_string))
         else:
 		print "NBNS Packet Response"
