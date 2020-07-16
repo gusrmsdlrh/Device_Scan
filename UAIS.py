@@ -37,7 +37,8 @@ def ssdp():
         while 1:
             data, address = sock.recvfrom(1024)
             if target in address:
-                ssdp_url = re.search('\w{4}://\w+.\w+.\w+.\w+:\w+/\w+.\w+', data, re.I).group()
+                ssdp_url = re.search('(?m)(http://.*.xml)', data, re.I).group()
+                print ssdp_url
                 resp=request.get(ssdp_url)
 
                 # Keyword extract
