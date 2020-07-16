@@ -90,7 +90,7 @@ def ssdp2():
 def mdns(reverse):    
     lens=[]
     for i in reverse:
-       lens.append(len(i))
+        lens.append(len(i))
     var_3=binascii.unhexlify('0'+str(lens[3]))
     var_2=binascii.unhexlify('0'+str(lens[2]))
     var_1=binascii.unhexlify('0'+str(lens[1]))
@@ -291,6 +291,8 @@ if __name__=="__main__":
         mdns_string=mdns(reverse)
         if str(nbns_string) == 'None' and str(mdns_string) == 'None':
 		print "NBNS, MDNS No Packet Response\n"
+		quick_time=timer()
+		print ("Time Stamp ---> "+str(quick_time-start))
 		ssdp()
         elif str(nbns_string) != 'None':
 		print "NBNS Packet Response\n"
@@ -302,5 +304,5 @@ if __name__=="__main__":
 		print "NBNS Packet Response"
 		print "MDNS Packet Response\n"
 		extract_match(str(nbns_string)+str(mdns_string))
-        quick_time=timer()
-        print ("Time Stamp ---> "+str(quick_time-start))
+        end=timer()
+        print ("Time Stamp ---> "+str(end-start))
