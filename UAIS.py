@@ -275,10 +275,10 @@ def extract_match(string1):
 			print maxValue, list_ls[i]
 	if maxValue == 0:
 		print "Response Data : "+string1
-		print "Device Type : Unknown"
+		print "Device Type : "+"Unknown"
 		print
 		end1=timer()
-		print ("Time Stamp ---> "+str(end1-start))
+		print "Time Stamp ---> "+str(end1-start)
 		print
 		nbns_string=nbns()
 		mdns_string=mdns(reverse)
@@ -329,4 +329,4 @@ if __name__=="__main__":
 			extract_match(str(nbns_string)+str(mdns_string))
 
         end=timer()
-        print ("Time Stamp ---> "+str(end-start))
+        print "Time Stamp ---> "+str(end-start)
