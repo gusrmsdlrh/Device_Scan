@@ -2,6 +2,7 @@ from scapy.all import *
 import requests
 from timeit import default_timer as timer
 import re
+import binascii
 
 #https://cnpnote.tistory.com/entry/PYTHON-%EC%96%B4%EB%96%BB%EA%B2%8C-%ED%8C%8C%EC%9D%B4%EC%8D%AC%EC%97%90%EC%84%9C-UDP-%EB%A9%80%ED%8B%B0-%EC%BA%90%EC%8A%A4%ED%8A%B8%ED%95%A9%EB%8B%88%EA%B9%8C
 #https://wiki.python.org/moin/UdpCommunication
@@ -12,7 +13,6 @@ start = timer()
 
 #Multicast SSDP
 def ssdp():    
-    print "========= Auxiliary_Scan(SSDP) ==========="
     global start
     ssdp_pkt= "M-SEARCH * HTTP/1.1\r\n" \
     "HOST: 239.255.255.250:1900\r\n" \
@@ -38,7 +38,6 @@ def ssdp():
             data, address = sock.recvfrom(1024)
             if target in address:
                 ssdp_url = re.search('(?m)(http://.*.xml)', data, re.I).group()
-                print ssdp_url
                 resp=request.get(ssdp_url)
 
                 # Keyword extract
@@ -47,10 +46,12 @@ def ssdp():
                 friendly_name = scrape(resp.text, '<friendlyName>', '</friendlyName>')
                 ssdp_extract_name= device_type+" "+model_description+" "+friendly_name
                 extract_match(ssdp_extract_name)
-                break
-    except socket.timeout:
-        print "No Response Packet\n"
-        ssdp2()
+                return "True"
+
+    except socket.timeout as timeerror:
+        print "SSDP Multicast "+str(timeerror)
+        ssdp_str=ssdp2()
+        return ssdp_str
         #start=start+time
  
 #Unicast SSDP
@@ -79,12 +80,13 @@ def ssdp2():
         friendly_name = scrape(resp.text, '<friendlyName>', '</friendlyName>')
         ssdp_extract_name= device_type+" "+model_description+" "+friendly_name
         extract_match(ssdp_extract_name)
-        print
-    except socket.timeout:
-        print "No Response Packet\n"
+    except socket.timeout as timeerror:
+        print "SSDP Unicast "+str(timeerror)
+        return "None"
         #start=start+time
     except socket.error as err:
         print str(err)+"\n"
+        return "None"
  
 #http://www.dns-sd.org/ServiceTypes.html
 #Unicast MDNS
@@ -128,6 +130,7 @@ def mdns(reverse):
  
 #Unicast NBNS
 def nbns():    
+    print "========= Auxiliary_Scan(NBNS,MDNS) ==========="
     global start
     nbns_pkt="\x82\x28\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00" \
     "\x20\x43\x4b\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41" \
@@ -260,19 +263,37 @@ def extract_match(string1):
 		trigger_num,recorder_num,printer_num,socket_num,firewall_num,refrigerator_num,monitor_num,\
 		watch_num,smartphone_num,healthcare_num,digital_num,game_num]
 
+
 	maxValue = list_ls[0]
 	max_idx=0
-	for idx,val in enumerate(range(1, len(list_ls))):
-		if maxValue < list_ls[val]:
+	for i in range(1, len(list_ls)):
+		if maxValue < list_ls[i]:
 
-			maxValue = list_ls[val]
-			max_idx=idx
-		elif maxValue != 0 and maxValue == list_ls[val]:
-			print maxValue, list_ls[val]
+			maxValue = list_ls[i]
+			max_idx=i
+		elif maxValue != 0 and maxValue == list_ls[i]:
+			print maxValue, list_ls[i]
 	if maxValue == 0:
 		print "Response Data : "+string1
 		print "Device Type : Unknown"
-		ssdp()
+		print
+		end1=timer()
+		print ("Time Stamp ---> "+str(end1-start))
+		print
+		nbns_string=nbns()
+		mdns_string=mdns(reverse)
+		if str(nbns_string) == 'None' and str(mdns_string) == 'None':
+			print "NBNS, MDNS No Packet Response\n"
+		elif str(nbns_string) == 'None':
+			print "MDNS Packet Response\n"
+			extract_match(str(nbns_string)+str(mdns_string))
+		elif str(mdns_string) == 'None':
+			print "NBNS Packet Response"
+			extract_match(str(nbns_string)+str(mdns_string))
+		elif str(mdns_string) != 'None' and str(nbns_string) != 'None':
+			print "NBNS Packet Response"
+			print "MDNS Packet Response\n"
+			extract_match(str(nbns_string)+str(mdns_string))
 	else:
 		print "Response Data : "+string1
 		print "Device Type : "+type[max_idx]
@@ -284,26 +305,28 @@ if __name__=="__main__":
         #set value
         time=0.2
         request=requests.Session()
-	 
         target=sys.argv[1]
         reverse=(target.split('.'))
-        print "========= Quick_Scan(MDNS, NBNS) ==========="
-        nbns_string=nbns()
-        mdns_string=mdns(reverse)
-        if str(nbns_string) == 'None' and str(mdns_string) == 'None':
-		print "NBNS, MDNS No Packet Response\n"
+        print "========= Primary_Scan(SSDP) ==========="
+        ssdp_string=ssdp()
+        if str(ssdp_string) == 'None':
+		print "SSDP No Packet Response\n"
 		quick_time=timer()
 		print ("Time Stamp ---> "+str(quick_time-start))
-		ssdp()
-        elif str(nbns_string) == 'None':
-		print "NBNS No Packet Response\n"
-		extract_match(str(nbns_string)+str(mdns_string))
-        elif str(mdns_string) == 'None':
-		print "MDNS No Packet Response\n"
-		extract_match(str(nbns_string)+str(mdns_string))
-        else:
-		print "NBNS Packet Response"
-		print "MDNS Packet Response\n"
-		extract_match(str(nbns_string)+str(mdns_string))
+		nbns_string=nbns()
+		mdns_string=mdns(reverse)
+		if str(nbns_string) == 'None' and str(mdns_string) == 'None':
+			print "NBNS, MDNS No Packet Response\n"
+		elif str(nbns_string) == 'None':
+			print "MDNS Packet Response\n"
+			extract_match(str(nbns_string)+str(mdns_string))
+		elif str(mdns_string) == 'None':
+			print "NBNS Packet Response"
+			extract_match(str(nbns_string)+str(mdns_string))
+		elif str(mdns_string) != 'None' and str(nbns_string) != 'None':
+			print "NBNS Packet Response"
+			print "MDNS Packet Response\n"
+			extract_match(str(nbns_string)+str(mdns_string))
+
         end=timer()
         print ("Time Stamp ---> "+str(end-start))
