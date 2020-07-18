@@ -118,6 +118,8 @@ def mdns(reverse):
  
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.settimeout(time)
+
+
     try:
         s.connect((target, 5353))
         s.send(mdns_pkt)
@@ -127,7 +129,7 @@ def mdns(reverse):
         #start=start+time
     except socket.error as err:
         print "MDNS "+str(err)
- 
+
 #Unicast NBNS
 def nbns():    
     print "========= Auxiliary_Scan(NBNS,MDNS) ==========="
@@ -266,13 +268,15 @@ def extract_match(string1):
 
 	maxValue = list_ls[0]
 	max_idx=0
+	second=0
 	for i in range(1, len(list_ls)):
 		if maxValue < list_ls[i]:
 
 			maxValue = list_ls[i]
 			max_idx=i
 		elif maxValue != 0 and maxValue == list_ls[i]:
-			print maxValue, list_ls[i]
+			second=i			
+			
 	if maxValue == 0:
 		print "Response Data : "+string1
 		print "Device Type : "+"Unknown"
@@ -297,6 +301,8 @@ def extract_match(string1):
 	else:
 		print "Response Data : "+string1
 		print "Device Type : "+type[max_idx]
+		if second > 0:
+			print "Device Type : "+type[second]
 		print
 
 if __name__=="__main__":
