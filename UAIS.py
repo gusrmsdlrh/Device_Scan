@@ -37,7 +37,8 @@ def ssdp():
         while 1:
             data, address = sock.recvfrom(1024)
             if target in address:
-                ssdp_url = re.search('(?m)(http://.*.xml)', data, re.I).group()
+                ssdp_url = re.search('(?m)(http://.*)', data, re.I).group()
+                ssdp_url=ssdp_url.split('\r')[0]
                 resp=request.get(ssdp_url)
 
                 # Keyword extract
@@ -47,6 +48,7 @@ def ssdp():
                 ssdp_extract_name= str(device_type)+" "+str(model_description)+" "+str(friendly_name)
                 extract_match(ssdp_extract_name)
                 return "True"
+
 
     except socket.timeout as timeerror:
         print "SSDP Multicast "+str(timeerror)
