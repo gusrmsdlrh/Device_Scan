@@ -44,7 +44,7 @@ def ssdp():
                 model_description = scrape(resp.text, '<modelDescription>', '</modelDescription>')
                 device_type = scrape(resp.text, '<deviceType>', '</deviceType>')
                 friendly_name = scrape(resp.text, '<friendlyName>', '</friendlyName>')
-                ssdp_extract_name= device_type+" "+model_description+" "+friendly_name
+                ssdp_extract_name= str(device_type)+" "+str(model_description)+" "+str(friendly_name)
                 extract_match(ssdp_extract_name)
                 return "True"
 
@@ -78,7 +78,7 @@ def ssdp2():
         model_description = scrape(resp.text, '<modelDescription>', '</modelDescription>')
         device_type = scrape(resp.text, '<deviceType>', '</deviceType>')
         friendly_name = scrape(resp.text, '<friendlyName>', '</friendlyName>')
-        ssdp_extract_name= device_type+" "+model_description+" "+friendly_name
+        ssdp_extract_name= str(device_type)+" "+str(model_description)+" "+str(friendly_name)
         extract_match(ssdp_extract_name)
     except socket.timeout as timeerror:
         print "SSDP Unicast "+str(timeerror)
@@ -125,10 +125,64 @@ def mdns(reverse):
         s.send(mdns_pkt)
         return s.recv(1024)
     except socket.timeout as timeerror:
-        print "MDNS "+str(timeerror)
+        print "MDNS Unicast "+str(timeerror)
         #start=start+time
+        return mdns2(reverse)
     except socket.error as err:
-        print "MDNS "+str(err)
+        print "MDNS Unicast "+str(err)
+        return mdns2(reverse)
+
+def mdns2(reverse):   
+	lens=[]
+	for i in reverse:
+		lens.append(len(i))
+	var_3=binascii.unhexlify('0'+str(lens[3]))
+	var_2=binascii.unhexlify('0'+str(lens[2]))
+	var_1=binascii.unhexlify('0'+str(lens[1]))
+	var_0=binascii.unhexlify('0'+str(lens[0]))
+
+	mdns_pkt='\x00\x00\x01\x00\x00\x0e\x00\x00\x00\x00\x00\x00' \
+	'\x05_http\x04_tcp\x05local\x00\x00\x0c\x00\x01' \
+	'\x05_rtsp\x04_tcp\x05local\x00\x00\x0c\x00\x01' \
+	'\x04_smb\x04_tcp\x05local\x00\x00\x0c\x00\x01' \
+	'\x0c_device-info\x04_tcp\x05local\x00\x00\x0c\x00\x01' \
+	'\t_services\x07_dns-sd\x04_udp\x05local\x00\x00\x0c\x00\x01' \
+	'\x05_svnp\x04_tcp\x05local\x00\x00\x0c\x00\x01' \
+	'\x06_adisk\x04_tcp\x05local\x00\x00\x0c\x00\x01' \
+	'\x0b_afpovertcp\x04_tcp\x05local\x00\x00\x0c\x00\x01' \
+	'\x0c_workstation\x04_tcp\x05local\x00\x00\x0c\x00\x01' \
+	'\x04_CGI\x04_tcp\x05local\x00\x00\x0c\x00\x01' \
+	'\x05_psia\x04_tcp\x05local\x00\x00\x0c\x00\x01' \
+	'\x06_dhnap\x04_tcp\x05local\x00\x00\x0c\x00\x01' \
+	'\x06_audio\x04_tcp\x05local\x00\x00\x0c\x00\x01' \
+	+var_3+reverse[3]+var_2+reverse[2]+var_1+reverse[1]+var_0+reverse[0]+'\x07in-addr\x04arpa\x00\x00\x0c\x00\x01'
+
+	MCAST_GRP = '224.0.0.251' 
+	MCAST_PORT = 5353
+	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+	try:
+		sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+	except AttributeError:
+		pass
+	sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 32) 
+	sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 1)
+
+	sock.bind((MCAST_GRP, MCAST_PORT))
+	host = socket.gethostbyname(socket.gethostname())
+	sock.settimeout(time)
+	#send data
+	sock.sendto(mdns_pkt, (MCAST_GRP, MCAST_PORT))
+	sock.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_IF, socket.inet_aton(host))
+	sock.setsockopt(socket.SOL_IP, socket.IP_ADD_MEMBERSHIP, 
+		           socket.inet_aton(MCAST_GRP) + socket.inet_aton(host))
+	try:
+		while 1:
+			data, addr = sock.recvfrom(1024)
+			if target in addr:
+				return data
+	except socket.timeout as timeerror:
+		print "MDNS Multicast "+str(timeerror)
+		#start=start+time
 
 #Unicast NBNS
 def nbns():    
