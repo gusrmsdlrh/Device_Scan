@@ -3,14 +3,12 @@ import requests
 from timeit import default_timer as timer
 import re
 import binascii
-
 #https://cnpnote.tistory.com/entry/PYTHON-%EC%96%B4%EB%96%BB%EA%B2%8C-%ED%8C%8C%EC%9D%B4%EC%8D%AC%EC%97%90%EC%84%9C-UDP-%EB%A9%80%ED%8B%B0-%EC%BA%90%EC%8A%A4%ED%8A%B8%ED%95%A9%EB%8B%88%EA%B9%8C
 #https://wiki.python.org/moin/UdpCommunication
  
  
 #start timer
 start = timer()
-
 #Multicast SSDP
 def ssdp():    
     global start
@@ -30,7 +28,6 @@ def ssdp():
     sock.settimeout(time)
     #send data
     sock.sendto(ssdp_pkt, (MCAST_GRP, MCAST_PORT))
-
     mreq = struct.pack("4sl", socket.inet_aton(MCAST_GRP), socket.INADDR_ANY)
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
     try:
@@ -40,16 +37,13 @@ def ssdp():
                 ssdp_url = re.search('(?m)(http://.*)', data, re.I).group()
                 ssdp_url=ssdp_url.split('\r')[0]
                 resp=request.get(ssdp_url)
-
                 # Keyword extract
                 model_description = scrape(resp.text, '<modelDescription>', '</modelDescription>')
                 device_type = scrape(resp.text, '<deviceType>', '</deviceType>')
                 friendly_name = scrape(resp.text, '<friendlyName>', '</friendlyName>')
                 ssdp_extract_name= str(device_type)+" "+str(model_description)+" "+str(friendly_name)
-                extract_match(ssdp_extract_name)
+                extract_match(ssdp_extract_name, "primary")
                 return "True"
-
-
     except socket.timeout as timeerror:
         print "SSDP Multicast "+str(timeerror)
         ssdp_str=ssdp2()
@@ -75,13 +69,12 @@ def ssdp2():
         data=s.recv(1024)
         ssdp_url = re.search('\w{4}://\w+.\w+.\w+.\w+:\w+/\w+.\w+', data, re.I).group()
         resp=request.get(ssdp_url)
-
         # A = Keyword extract
         model_description = scrape(resp.text, '<modelDescription>', '</modelDescription>')
         device_type = scrape(resp.text, '<deviceType>', '</deviceType>')
         friendly_name = scrape(resp.text, '<friendlyName>', '</friendlyName>')
         ssdp_extract_name= str(device_type)+" "+str(model_description)+" "+str(friendly_name)
-        extract_match(ssdp_extract_name)
+        extract_match(ssdp_extract_name, "primary")
     except socket.timeout as timeerror:
         print "SSDP Unicast "+str(timeerror)
         return "None"
@@ -100,7 +93,6 @@ def mdns(reverse):
     var_2=binascii.unhexlify('0'+str(lens[2]))
     var_1=binascii.unhexlify('0'+str(lens[1]))
     var_0=binascii.unhexlify('0'+str(lens[0]))
-
     global start
     mdns_pkt='\x00\x00\x01\x00\x00\x0e\x00\x00\x00\x00\x00\x00' \
     '\x05_http\x04_tcp\x05local\x00\x00\x0c\x00\x01' \
@@ -120,8 +112,6 @@ def mdns(reverse):
  
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.settimeout(time)
-
-
     try:
         s.connect((target, 5353))
         s.send(mdns_pkt)
@@ -133,7 +123,6 @@ def mdns(reverse):
     except socket.error as err:
         print "MDNS Unicast "+str(err)
         return mdns2(reverse)
-
 def mdns2(reverse):   
 	lens=[]
 	for i in reverse:
@@ -142,7 +131,6 @@ def mdns2(reverse):
 	var_2=binascii.unhexlify('0'+str(lens[2]))
 	var_1=binascii.unhexlify('0'+str(lens[1]))
 	var_0=binascii.unhexlify('0'+str(lens[0]))
-
 	mdns_pkt='\x00\x00\x01\x00\x00\x0e\x00\x00\x00\x00\x00\x00' \
 	'\x05_http\x04_tcp\x05local\x00\x00\x0c\x00\x01' \
 	'\x05_rtsp\x04_tcp\x05local\x00\x00\x0c\x00\x01' \
@@ -158,7 +146,6 @@ def mdns2(reverse):
 	'\x06_dhnap\x04_tcp\x05local\x00\x00\x0c\x00\x01' \
 	'\x06_audio\x04_tcp\x05local\x00\x00\x0c\x00\x01' \
 	+var_3+reverse[3]+var_2+reverse[2]+var_1+reverse[1]+var_0+reverse[0]+'\x07in-addr\x04arpa\x00\x00\x0c\x00\x01'
-
 	MCAST_GRP = '224.0.0.251' 
 	MCAST_PORT = 5353
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -168,7 +155,6 @@ def mdns2(reverse):
 		pass
 	sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 32) 
 	sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 1)
-
 	sock.bind((MCAST_GRP, MCAST_PORT))
 	host = socket.gethostbyname(socket.gethostname())
 	sock.settimeout(time)
@@ -185,7 +171,6 @@ def mdns2(reverse):
 	except socket.timeout as timeerror:
 		print "MDNS Multicast "+str(timeerror)
 		#start=start+time
-
 #Unicast NBNS
 def nbns():    
     print "========= Auxiliary_Scan(NBNS,MDNS) ==========="
@@ -213,21 +198,19 @@ def scrape(text, start_trig, end_trig):
     else:
         return False
  
-def extract_match(string1):
+def extract_match(string1, string2):
 	device_list=[['router','switch','hub','gateway','modem', 'access point', 'accesspoint'],
 			['television', 'tv'],['programmable', 'controller'],['sensor', 'thermostat'],
 			['pc', 'laptop'],['camera'],['nas'],['video'],['trigger'],
 			['recorder'],['printer'],['socket'],['firewall'],['refrigerator'],
 			['monitor'],['watch'],['smartphone'],['healthcare'],['digital media receiver', 'media', 'digital'],
 			['consumer game', 'game']]
-
 	type=['router', 'tv','controller',
 		'sensor','laptop','camera',
 		'nas','video','trigger','recorder',
 		'printer','socket','firewall','refrigerator',
 		'monitor','watch','smartphone','healthcare',
 		'digital','game']
-
 	for j in range(20):
 		if type[j] == "router":
 			router_num=0 
@@ -269,7 +252,6 @@ def extract_match(string1):
 			digital_num=0
 		elif type[j] == "game":
 			game_num=0
-
 		for i in device_list[j]:
 			#print i
 			#print j
@@ -316,18 +298,14 @@ def extract_match(string1):
 					digital_num=digital_num+1
 				elif type[j] == "game":
 					game_num=game_num+1
-
 	list_ls=[router_num, tv_num, controller_num, sensor_num,laptop_num,camera_num,nas_num,video_num,\
 		trigger_num,recorder_num,printer_num,socket_num,firewall_num,refrigerator_num,monitor_num,\
 		watch_num,smartphone_num,healthcare_num,digital_num,game_num]
-
-
 	maxValue = list_ls[0]
 	max_idx=0
 	second=0
 	for i in range(1, len(list_ls)):
 		if maxValue < list_ls[i]:
-
 			maxValue = list_ls[i]
 			max_idx=i
 		elif maxValue != 0 and maxValue == list_ls[i]:
@@ -340,27 +318,29 @@ def extract_match(string1):
 		end1=timer()
 		print "Time Stamp ---> "+str(end1-start)
 		print
-		nbns_string=nbns()
-		mdns_string=mdns(reverse)
-		if str(nbns_string) == 'None' and str(mdns_string) == 'None':
-			print "NBNS, MDNS No Packet Response\n"
-		elif str(nbns_string) == 'None':
-			print "MDNS Packet Response\n"
-			extract_match(str(nbns_string)+str(mdns_string))
-		elif str(mdns_string) == 'None':
-			print "NBNS Packet Response"
-			extract_match(str(nbns_string)+str(mdns_string))
-		elif str(mdns_string) != 'None' and str(nbns_string) != 'None':
-			print "NBNS Packet Response"
-			print "MDNS Packet Response\n"
-			extract_match(str(nbns_string)+str(mdns_string))
+		if string2=="auxiliary":
+			sys.exit()
+		else:
+			nbns_string=nbns()
+			mdns_string=mdns(reverse)
+			if str(nbns_string) == 'None' and str(mdns_string) == 'None':
+				print "NBNS, MDNS No Packet Response\n"
+			elif str(nbns_string) == 'None':
+				print "MDNS Packet Response\n"
+				extract_match(str(nbns_string)+str(mdns_string), "auxiliary")
+			elif str(mdns_string) == 'None':
+				print "NBNS Packet Response"
+				extract_match(str(nbns_string)+str(mdns_string), "auxiliary")
+			elif str(mdns_string) != 'None' and str(nbns_string) != 'None':
+				print "NBNS Packet Response"
+				print "MDNS Packet Response\n"
+				extract_match(str(nbns_string)+str(mdns_string), "auxiliary")
 	else:
 		print "Response Data : "+string1
 		print "Device Type : "+type[max_idx]
 		if second > 0:
 			print "Device Type : "+type[second]
 		print
-
 if __name__=="__main__":
         nbns_string=''
         mdns_string=''
@@ -381,14 +361,13 @@ if __name__=="__main__":
 			print "NBNS, MDNS No Packet Response\n"
 		elif str(nbns_string) == 'None':
 			print "MDNS Packet Response\n"
-			extract_match(str(nbns_string)+str(mdns_string))
+			extract_match(str(nbns_string)+str(mdns_string), "auxiliary")
 		elif str(mdns_string) == 'None':
 			print "NBNS Packet Response"
-			extract_match(str(nbns_string)+str(mdns_string))
+			extract_match(str(nbns_string)+str(mdns_string), "auxiliary")
 		elif str(mdns_string) != 'None' and str(nbns_string) != 'None':
 			print "NBNS Packet Response"
 			print "MDNS Packet Response\n"
-			extract_match(str(nbns_string)+str(mdns_string))
-
+			extract_match(str(nbns_string)+str(mdns_string), "auxiliary")
         end=timer()
         print "Time Stamp ---> "+str(end-start)
