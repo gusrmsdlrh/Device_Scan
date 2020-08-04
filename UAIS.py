@@ -11,7 +11,6 @@ def primary_1():
         MCAST_GRP = '239.255.255.250'
         MCAST_PORT = 1900
 
-        # socket Multicast Request
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(time)
         sock.sendto(primary_pkt, (MCAST_GRP, MCAST_PORT))
@@ -115,7 +114,6 @@ def Auxiliary_3():
         sock.settimeout(time)
         sock.sendto(Auxiliary_2_pkt, (MCAST_GRP, MCAST_PORT))
         sock.setsockopt(socket.SOL_IP, socket.IP_ADD_MEMBERSHIP,socket.inet_aton(MCAST_GRP) + socket.inet_aton(host))
-
         try:
                 while 1:
                         data, addr = sock.recvfrom(1024)
@@ -189,13 +187,13 @@ def keyword_match(data):
         if data == "NullNull":
             sys.exit()
 
-        device_list=[['router','switch','hub','gateway','modem', 'access point', 'accesspoint'],
+        DT_list=[['router','switch','hub','gateway','modem', 'access point', 'accesspoint'],
                 ['television', 'tv'],['programmable', 'controller'],['sensor', 'thermostat'],
                 ['pc', 'laptop'],['camera'],['nas'],['video'],['trigger'],
                 ['recorder'],['printer'],['socket'],['firewall'],['refrigerator'],
                 ['monitor'],['watch'],['smartphone'],['healthcare'],['digital media receiver', 'media', 'digital'],
                 ['consumer game', 'game']]
-        type=['router', 'tv','controller',
+        DT=['router', 'tv','controller',
                 'sensor','laptop','camera',
                 'nas','video','trigger','recorder',
                 'printer','socket','firewall','refrigerator',
@@ -203,7 +201,7 @@ def keyword_match(data):
                 'digital','game']
 
         # Type Var Declaration
-        for i in type:
+        for i in DT:
                 globals()['{}_count'.format(i)]=0
 
         # UnboundLocalError Exception
@@ -218,7 +216,7 @@ def keyword_match(data):
 
         # Device Type Count
         for j in range(20):
-                for i in device_list[j]:
+                for i in DT_list[j]:
                         if i in data.lower():
                                 list_ls[j]=list_ls[j]+1
         # List Sort
@@ -240,9 +238,11 @@ def keyword_match(data):
                 print("Time Stamp ---> " + str(DT_unknown - start)+"\r\n")
         else:
                 print ("Data : " + data)
-                print ("Device Type : " + type[max_idx])
+                print ("Device Type : " + DT[max_idx].upper())
                 if second_idx > 0:
-                        print ("Device Type : " + type[second_idx])
+                        print ("Device Type : " + DT[second_idx].upper())
+                DT_class=timer()
+                print("Time Stamp ---> " + str(DT_class - start) + "\r\n")
                 sys.exit()
 
 if __name__=="__main__":
