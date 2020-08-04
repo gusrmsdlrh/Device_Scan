@@ -74,19 +74,19 @@ def scrape(text, start_trig, end_trig):
 
 
 def Auxiliary_1():
-    print("===========Auxiliary SCAN===========")
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.settimeout(time)
-    try:
-        sock.connect((target, 137))
-        sock.send(auxiliary_pkt)
-        return (sock.recv(1024).decode('utf-8','replace'))
-    except socket.timeout as timeerror:
-        print("Auxiliary Scan 1 " + str(timeerror))
-        return "Null"
-    except socket.error as err:
-        print("Auxiliary Scan 1 " + str(err))
-        return "Null"
+        print("===========Auxiliary SCAN===========")
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.settimeout(time)
+        try:
+                sock.connect((target, 137))
+                sock.send(auxiliary_pkt)
+                return (sock.recv(1024).decode('utf-8','replace'))
+        except socket.timeout as timeerror:
+                print("Auxiliary Scan 1 " + str(timeerror))
+                return "Null"
+        except socket.error as err:
+                print("Auxiliary Scan 1 " + str(err))
+                return "Null"
 
 def Auxiliary_2():
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -105,25 +105,25 @@ def Auxiliary_2():
                 return Auxiliary_3_str
 
 def Auxiliary_3():
-    MCAST_GRP = '224.0.0.251'
-    MCAST_PORT = 5353
+        MCAST_GRP = '224.0.0.251'
+        MCAST_PORT = 5353
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind(('', MCAST_PORT))
-    host = socket.gethostbyname(socket.gethostname())
-    sock.settimeout(time)
-    sock.sendto(Auxiliary_2_pkt, (MCAST_GRP, MCAST_PORT))
-    sock.setsockopt(socket.SOL_IP, socket.IP_ADD_MEMBERSHIP,socket.inet_aton(MCAST_GRP) + socket.inet_aton(host))
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind(('', MCAST_PORT))
+        host = socket.gethostbyname(socket.gethostname())
+        sock.settimeout(time)
+        sock.sendto(Auxiliary_2_pkt, (MCAST_GRP, MCAST_PORT))
+        sock.setsockopt(socket.SOL_IP, socket.IP_ADD_MEMBERSHIP,socket.inet_aton(MCAST_GRP) + socket.inet_aton(host))
 
-    try:
-        while 1:
-            data, addr = sock.recvfrom(1024)
-            if target in addr:
-                return(data.decode('utf-8','replace'))
-    except socket.timeout as timeerror:
-        print ("Auxiliary Scan 3 "+str(timeerror))
-        return "Null"
+        try:
+                while 1:
+                        data, addr = sock.recvfrom(1024)
+                        if target in addr:
+                                return(data.decode('utf-8','replace'))
+        except socket.timeout as timeerror:
+                print ("Auxiliary Scan 3 "+str(timeerror))
+                return "Null"
 
 def Auxiliary_reverse_ip(ip_addr):
         lens = []
