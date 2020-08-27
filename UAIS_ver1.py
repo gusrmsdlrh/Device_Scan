@@ -269,6 +269,3 @@ if __name__=="__main__":
  
         end = timer()
         print("Time Stamp ---> " + str(end - start)+"\r\n")
-
-
-출처: https://johyungen.tistory.com/503 [Self-Improvement]
